@@ -1,31 +1,35 @@
 // src/core/xray.ts
 import * as fs from 'fs';
+import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { PATHS } from '../config';
 import { XrayConfig, XrayClient } from '../types';
-import { runCommand } from '../utils/system';
+import { runCommand, isValidUsername } from '../utils/system';
 
-// Fungsi untuk membaca dan mengubah file config xray (menggantikan jq)
+// Fungsi membaca dan mengubah file config xray
 function updateXrayConfig(protocol: 'vmess' | 'vless' | 'trojan', newClient: XrayClient) {
     try {
+        if (!fs.existsSync(PATHS.xrayConfig)) throw new Error("File config Xray tidak ditemukan!");
+        
         const rawData = fs.readFileSync(PATHS.xrayConfig, 'utf-8');
         const config: XrayConfig = JSON.parse(rawData);
-
-        // Cari inbound (port/protokol) yang sesuai
+        
         const inboundIndex = config.inbounds.findIndex(i => i.protocol === protocol);
         
         if (inboundIndex !== -1) {
-            // Tambahkan user baru ke array clients
-            config.inbounds[inboundIndex].settings.clients.push(newClient);
+            const clients = config.inbounds[inboundIndex].settings.clients;
             
-            // Simpan kembali ke file
+            // CEK DUPLIKAT: Jangan buat kalau email/username sudah ada
+            const isExists = clients.some(c => c.email === newClient.email);
+            if (isExists) throw new Error(`Username ${newClient.email} sudah ada di protokol ${protocol}`);
+
+            config.inbounds[inboundIndex].settings.clients.push(newClient);
             fs.writeFileSync(PATHS.xrayConfig, JSON.stringify(config, null, 2));
             return true;
         }
         return false;
-    } catch (error) {
-        console.error("Gagal mengupdate config Xray:", error);
-        return false;
+    } catch (error: any) {
+        throw new Error(`Gagal update config Xray: ${error.message}`);
     }
 }
 
@@ -33,13 +37,18 @@ function updateXrayConfig(protocol: 'vmess' | 'vless' | 'trojan', newClient: Xra
 function saveExpiry(username: string, days: number) {
     const expDate = new Date();
     expDate.setDate(expDate.getDate() + days);
-    const dateStr = expDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const dateStr = expDate.toISOString().split('T')[0]; 
     
+    const dbDir = path.dirname(PATHS.userDbXray);
+    if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+    if (!fs.existsSync(PATHS.userDbXray)) fs.writeFileSync(PATHS.userDbXray, '');
+
     fs.appendFileSync(PATHS.userDbXray, `${username}:${dateStr}\n`);
     return dateStr;
 }
 
 export async function createVmess(username: string, days: number, domain: string) {
+    if (!isValidUsername(username)) throw new Error("Username hanya huruf dan angka!");
     const uuid = uuidv4();
     const client: XrayClient = { id: uuid, alterId: 0, email: username };
     
@@ -47,20 +56,19 @@ export async function createVmess(username: string, days: number, domain: string
         const exp = saveExpiry(username, days);
         await runCommand('systemctl restart xray');
         
-        // Buat format link vmess
         const vmessJson = JSON.stringify({
             v: "2", ps: username, add: domain, port: "443", id: uuid,
             aid: "0", scy: "auto", net: "ws", path: "/vmess",
             type: "none", host: domain, tls: "tls"
         });
         const link = `vmess://${Buffer.from(vmessJson).toString('base64')}`;
-        
         return { username, uuid, expired: exp, link };
     }
-    throw new Error("Gagal membuat Vmess");
+    throw new Error("Protokol Vmess tidak ditemukan di config.");
 }
 
 export async function createVless(username: string, days: number, domain: string) {
+    if (!isValidUsername(username)) throw new Error("Username hanya huruf dan angka!");
     const uuid = uuidv4();
     const client: XrayClient = { id: uuid, email: username };
     
@@ -71,14 +79,12 @@ export async function createVless(username: string, days: number, domain: string
         const link = `vless://${uuid}@${domain}:443?path=%2Fvless&security=tls&encryption=none&type=ws#${username}`;
         return { username, uuid, expired: exp, link };
     }
-    throw new Error("Gagal membuat Vless");
+    throw new Error("Protokol Vless tidak ditemukan di config.");
 }
-// ... (Kode sebelumnya biarkan saja) ...
 
 export async function createTrojan(username: string, days: number, domain: string) {
-    // Generate password acak 8 karakter (hex)
+    if (!isValidUsername(username)) throw new Error("Username hanya huruf dan angka!");
     const pass = Math.random().toString(16).slice(-8);
-    // Trojan menggunakan field 'password' bukan 'id'
     const client: XrayClient = { password: pass, email: username };
     
     if (updateXrayConfig('trojan', client)) {
@@ -88,16 +94,18 @@ export async function createTrojan(username: string, days: number, domain: strin
         const link = `trojan://${pass}@${domain}:443?path=%2Ftrojan&security=tls&type=ws#${username}`;
         return { username, password: pass, expired: exp, link };
     }
-    throw new Error("Gagal membuat Trojan");
+    throw new Error("Protokol Trojan tidak ditemukan di config.");
 }
 
 export async function deleteXray(username: string) {
+    if (!isValidUsername(username)) throw new Error("Username tidak valid!");
     try {
+        if (!fs.existsSync(PATHS.xrayConfig)) return false;
+
         const rawData = fs.readFileSync(PATHS.xrayConfig, 'utf-8');
         const config: XrayConfig = JSON.parse(rawData);
         let found = false;
 
-        // Loop semua inbound dan hapus client dengan email (username) yang cocok
         config.inbounds.forEach(inbound => {
             if (inbound.settings.clients) {
                 const initialLength = inbound.settings.clients.length;
@@ -110,14 +118,14 @@ export async function deleteXray(username: string) {
 
         if (found) {
             fs.writeFileSync(PATHS.xrayConfig, JSON.stringify(config, null, 2));
-            
-            // Hapus dari database txt menggunakan perintah sed Linux
-            await runCommand(`sed -i "/^${username}:/d" ${PATHS.userDbXray}`);
+            if (fs.existsSync(PATHS.userDbXray)) {
+                await runCommand(`sed -i "/^${username}:/d" ${PATHS.userDbXray}`);
+            }
             await runCommand('systemctl restart xray');
             return true;
         }
         return false;
-    } catch (error) {
-        throw new Error("Gagal menghapus akun Xray.");
+    } catch (error: any) {
+        throw new Error(`Gagal menghapus akun Xray: ${error.message}`);
     }
 }
