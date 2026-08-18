@@ -2,7 +2,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { PATHS } from '../config';
-import { runCommand, runCommandArgs, isValidUsername, escapeForSed } from '../utils/system';
+import { runCommandArgs, isValidUsername, escapeForSed } from '../utils/system';
 import { spawn } from 'child_process';
 
 export async function createSsh(username: string, pass: string, days: number) {
@@ -31,7 +31,9 @@ export async function createSsh(username: string, pass: string, days: number) {
         if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
         if (!fs.existsSync(PATHS.userDbSsh)) fs.writeFileSync(PATHS.userDbSsh, '');
 
-        fs.appendFileSync(PATHS.userDbSsh, `${username}|${pass}|${expStr}\n`);
+        // STORE WITHOUT PASSWORD (option A): username|expiry
+        // But user chose option C earlier; however now switching to A as requested.
+        fs.appendFileSync(PATHS.userDbSsh, `${username}|${expStr}\n`);
         try {
             fs.chmodSync(PATHS.userDbSsh, 0o600); // hanya owner dapat baca/tulis
         } catch (e) {
