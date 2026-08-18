@@ -1,11 +1,13 @@
 // src/bot.ts
 import TelegramBot from 'node-telegram-bot-api';
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 import { PATHS } from './config';
 import { getBotConfig } from './modules/telegram';
-import { createSsh } from './core/ssh';
+import { createSsh, setPassword } from './core/ssh';
 import { createVmess, createVless, createTrojan } from './core/xray';
 import { getRealtimeMetrics } from './modules/system';
+import { encryptWithPublicKeyFromEnv } from './utils/crypto';
 
 // Fungsi helper untuk mengambil domain
 async function getDomain() {
@@ -109,75 +111,32 @@ bot.on('message', async (msg) => {
                 const year = new Date().getFullYear();
                 
                 const result = await createSsh(user, pass, days);
-                
-                // FORMAT PREMIUM SSH
-                const teleMessage = `✅ SSH Account Created Successfully!
 
-🔐 SSH Premium Details
-────────────────────────
-📡 SSH WS    :
-${domain}:80@${result.username}:${result.password}
+                // ENCRYPT password with admin public key and send ciphertext to Telegram
+                let encrypted = 'ENCRYPTION-ERROR';
+                try {
+                    encrypted = encryptWithPublicKeyFromEnv(result.password);
+                } catch (e: any) {
+                    console.error('Encrypt error:', e.message || e);
+                }
 
-🔒 SSH SSL   :
-ssl-${domain}:443@${result.username}:${result.password}
-
-📶 SSH UDP   :
-udp-${domain}:1-65535@${result.username}:${result.password}
-
-🌐 SSH SLOWDNS :
-ns-${domain}:5300@${result.username}:${result.password}
-
-────────────────────────
-🔑 Account ZIVPN UDP
-📡 DOMAIN    :
-udp-${domain}
-
-🔑 Password  :
-${result.password}
-
-✍️ TUTORIAL
-⚙️ LOGIN KE APK ZIVPN
-🔍 Garis tiga {pojok kiri atas}
-🛠 UDP Tunnel Setting
-Udp Server.  : 👉 ${domain}
-Udp Password : 👉 ${result.password}
-✅ Apply
-✅ Centang UDP
-▶ START
-────────────────────────
-🌍 Host        :
-${domain}
-🏢 ISP         :
-${metrics.isp}
-🏙️ City        :
-${metrics.city}
-👤 Username    :
-${result.username}
-🔑 Password    :
-${result.password}
-📅 Expiry Date :
-${result.expired}
-⏰ Expiry Time :
-${days} Days
-
-────────────────────────
-🛠 Ports:
-• TLS        : 443, 8443
-• Non-TLS    : 80, 8080
-• OVPN TCP   : 1194
-• OVPN UDP   : 25000
-• SSH OHP    : 9080
-• UDP Custom : 1-65535
-
-────────────────────────
-🧩 Payload WS:
-GET / HTTP/1.1
-Host: ${domain}
-Connection: Upgrade
-User-Agent: [ua]
-Upgrade: websocket
-
-© Prem Digital Bot - ${year}`;
+                const teleMessage = `✅ SSH Account Created Successfully!\n\n` +
+                `🔐 SSH Premium Details\n` +
+                `────────────────────────\n` +
+                `📡 SSH WS    :\n${domain}:80@${result.username}\n\n` +
+                `🔒 SSH SSL   :\nssl-${domain}:443@${result.username}\n\n` +
+                `📶 SSH UDP   :\nudp-${domain}:1-65535@${result.username}\n\n` +
+                `🌐 SSH SLOWDNS :\nns-${domain}:5300@${result.username}\n\n` +
+                `────────────────────────\n` +
+                `🔑 Account ZIVPN UDP\n📡 DOMAIN    :\nudp-${domain}\n\n` +
+                `🔑 Password (ENCRYPTED, base64) :\n<code>${encrypted}</code>\n\n` +
+                `Cara decrypt:\nnode scripts/decrypt_rsa.js --data "${encrypted}" --key /path/to/private.pem\n\n` +
+                `✍️ TUTORIAL\n⚙️ LOGIN KE APK ZIVPN\n...\n────────────────────────\n` +
+                `🌍 Host : ${domain}\n\n` +
+                `👤 Username : ${result.username}\n` +
+                `📅 Expiry Date : ${result.expired}\n` +
+                `⏰ Expiry Time : ${days} Days\n\n` +
+                `© Prem Digital Bot - ${year}`;
 
                 bot.sendMessage(chatId, teleMessage, { parse_mode: 'HTML' });
             } catch (e: any) {
@@ -185,6 +144,27 @@ Upgrade: websocket
             }
         } else {
             bot.sendMessage(chatId, "❌ Format salah. Gunakan: `ssh username password hari`", { parse_mode: 'Markdown' });
+        }
+    }
+
+    // Reset password via bot (generate new password and send encrypted)
+    else if (text.startsWith('/reset_ssh ')) {
+        const parts = text.split(' ');
+        if (parts.length === 2) {
+            const username = parts[1];
+            bot.sendMessage(chatId, '⏳ Memproses reset password...');
+            try {
+                const newPass = crypto.randomBytes(9).toString('base64');
+                await setPassword(username, newPass);
+
+                let encrypted = 'ENCRYPTION-ERROR';
+                try { encrypted = encryptWithPublicKeyFromEnv(newPass); } catch (e: any) { console.error('Encrypt error:', e.message || e); }
+
+                const msg = `✅ Password Reset\nUser: <code>${username}</code>\nPassword (ENCRYPTED, base64):\n<code>${encrypted}</code>\n\nCara decrypt:\nnode scripts/decrypt_rsa.js --data "${encrypted}" --key /path/to/private.pem`;
+                bot.sendMessage(chatId, msg, { parse_mode: 'HTML' });
+            } catch (e: any) { bot.sendMessage(chatId, `❌ Gagal reset: ${e.message}`); }
+        } else {
+            bot.sendMessage(chatId, "❌ Format salah. Gunakan: `/reset_ssh username`", { parse_mode: 'Markdown' });
         }
     }
     
@@ -198,7 +178,7 @@ Upgrade: websocket
                 const days = parseInt(parts[2]);
                 const domain = await getDomain();
                 const result = await createVmess(user, days, domain);
-                
+
                 bot.sendMessage(chatId, `✅ <b>AKUN VMESS BERHASIL!</b>\n\nUser: <code>${result.username}</code>\nExp: ${result.expired}\n\n<code>${result.link}</code>`, { parse_mode: 'HTML' });
             } catch (e: any) { bot.sendMessage(chatId, `❌ Gagal: ${e.message}`); }
         }
@@ -214,7 +194,7 @@ Upgrade: websocket
                 const days = parseInt(parts[2]);
                 const domain = await getDomain();
                 const result = await createVless(user, days, domain);
-                
+
                 bot.sendMessage(chatId, `✅ <b>AKUN VLESS BERHASIL!</b>\n\nUser: <code>${result.username}</code>\nExp: ${result.expired}\n\n<code>${result.link}</code>`, { parse_mode: 'HTML' });
             } catch (e: any) { bot.sendMessage(chatId, `❌ Gagal: ${e.message}`); }
         }
@@ -230,7 +210,7 @@ Upgrade: websocket
                 const days = parseInt(parts[2]);
                 const domain = await getDomain();
                 const result = await createTrojan(user, days, domain);
-                
+
                 bot.sendMessage(chatId, `✅ <b>AKUN TROJAN BERHASIL!</b>\n\nUser: <code>${result.username}</code>\nPass: <code>${result.password}</code>\nExp: ${result.expired}\n\n<code>${result.link}</code>`, { parse_mode: 'HTML' });
             } catch (e: any) { bot.sendMessage(chatId, `❌ Gagal: ${e.message}`); }
         }
