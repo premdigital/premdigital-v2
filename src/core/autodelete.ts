@@ -62,3 +62,8 @@ export async function runAutoDelete() {
 
     return deletedCount;
 }
+// Eksekusi otomatis jika file ini dijalankan via cronjob
+// @ts-ignore
+if (typeof require !== 'undefined' && require.main === module) {
+    runAutoDelete().then(count => console.log(`Selesai. Total dihapus: ${count}`));
+}
