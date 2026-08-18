@@ -24,7 +24,14 @@ export async function getAccountSummary() {
             lines.forEach(line => {
                 if (line.trim()) {
                     const parts = line.split('|');
-                    summary.sshUsers.push(`- ${parts[0]} (Exp: ${parts[2]})`);
+                    // New format: username|expiry
+                    // Old legacy format may have been username|password|expiry
+                    let username = parts[0] || 'unknown';
+                    let expiry = 'unknown';
+                    if (parts.length >= 3) expiry = parts[2] || 'unknown';
+                    else if (parts.length === 2) expiry = parts[1] || 'unknown';
+
+                    summary.sshUsers.push(`- ${username} (Exp: ${expiry})`);
                     summary.sshCount++;
                 }
             });
