@@ -8,8 +8,8 @@ import { createSsh, deleteSsh } from './core/ssh';
 import { createVmess, createVless, createTrojan, deleteXray } from './core/xray';
 import { checkServiceStatus, getAccountSummary } from './core/status';
 import { runAutoDelete } from './core/autodelete';
-import { getRealtimeMetrics } from './modules/system';
-import { saveBotConfig, getBotConfig, sendTelegramMessage } from './modules/telegram';
+// import { getRealtimeMetrics } from './modules/system';
+// import { saveBotConfig, getBotConfig, sendTelegramMessage } from './modules/telegram';
 // IMPORT setSshBanner DITAMBAHKAN DI SINI
 import { saveDomain, generateSSL, installUdp, setSshBanner } from './core/setup'; 
 
@@ -370,5 +370,5 @@ Upgrade: websocket
 }
 
 // FUNGSI XRAY (Vmess, Vless, Trojan)
-async function handleCreateVmess() { const data = await inquirer.prompt([{ type: 'input', name: 'user', message: 'User VMESS:' }, { type: 'number', name: 'hari', message: 'Hari:', default: 30 }]); try { const domain = await getDomain(); const result = await createVmess(data.user, data.hari, domain); await sendTelegramMessage(`🚀 <b>NEW VMESS</b>\nUser: <code>${result.username}</code>\nExp: ${result.expired}\n\n<code>${result.link}</code>`); console.clear(); console.log(chalk.cyan("======================================")); console.log(chalk.greenBright.bold("       AKUN VMESS BERHASIL DIBUAT     ")); console.log(chalk.cyan("======================================")); console.log(`Host: ${chalk.yellow(domain)}\nUser: ${chalk.yellow(result.username)}\nExp : ${chalk.red(result.expired)}\n\nLink:\n${chalk.gray(result.link)}\n`); console.log(chalk.cyan("======================================")); } catch (err: any) { console.log(`\n${chalk.red.bold('❌ Error:')} ${err.message}`); } await askToReturn(); }
-async function handleCreateVless() { console.log("Fitur Vless menyusul..."); }
+async function handleCreateVmess() { console.log("Fitur Vmess dipanggil"); }
+async function handleCreateVless() { console.log("Fitur Vless dipanggil"); }
