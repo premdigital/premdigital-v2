@@ -26,7 +26,9 @@ bash <(curl -sL https://raw.githubusercontent.com/premdigital/premdigital-v2/mai
 echo -e "${GREEN}>>> Tahap 4: Menginstal Panel Manajemen Bot...${NC}"
 # Pastikan menggunakan Node.js versi terbaru
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt install -y nodejs unzip cron openssl
+
+# PERBAIKAN: Menambahkan 'git' di sini
+apt install -y git nodejs unzip cron openssl
 
 rm -rf /root/premdigital-panel
 git clone https://github.com/premdigital/premdigital-v2.git /root/premdigital-panel
