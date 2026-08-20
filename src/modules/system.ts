@@ -1,7 +1,16 @@
 import os from 'os';
 
-export async function getRealtimeMetrics() {
-    const freeRam = (os.freemem() / 1024 / 1024 / 1024).toFixed(2);
-    const totalRam = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
-    console.log(`   [Metrics] RAM: ${freeRam}GB Free / ${totalRam}GB Total`);
+export async function getRealtimeMetrics(): Promise<any> {
+    const totalRam = Math.round(os.totalmem() / 1024 / 1024);
+    const usedRam = Math.round((os.totalmem() - os.freemem()) / 1024 / 1024);
+    
+    return {
+        ip: "Otomatis",
+        city: "Singapura",
+        isp: "VPS Provider",
+        usedRamMb: usedRam,
+        totalRamMb: totalRam,
+        storageUsed: "10GB",
+        storageTotal: "50GB"
+    };
 }
