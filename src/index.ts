@@ -3,6 +3,8 @@
 import inquirer from 'inquirer';
 import * as fs from 'fs';
 import chalk from 'chalk';
+import { getRealtimeMetrics } from './modules/system.js';
+import { getBotConfig, saveBotConfig, sendTelegramMessage } from './modules/telegram.js';
 import { PATHS } from './config';
 import { runCommand } from './utils/system';
 import { createSsh, deleteSsh } from './core/ssh';
@@ -19,6 +21,19 @@ async function getDomain() {
         if (fs.existsSync(PATHS.domainFile)) { return fs.readFileSync(PATHS.domainFile, 'utf-8').trim(); }
     } catch (e) {}
     return "Belum Diatur";
+}
+
+import { exec } from 'child_process';
+import util from 'util';
+const execPromise = util.promisify(exec);
+
+async function runCommand(command: string): Promise<string> {
+    try {
+        const { stdout } = await execPromise(command);
+        return stdout.trim();
+    } catch (error) {
+        return 'inactive'; // Asumsi error berarti layanan tidak aktif
+    }
 }
 
 async function displayDashboard() {
