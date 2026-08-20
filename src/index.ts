@@ -10,12 +10,13 @@ import { runCommand } from './utils/system';
 import { createSsh, deleteSsh } from './core/ssh';
 import { createVmess, createVless, createTrojan, deleteXray } from './core/xray';
 import os from 'os';
+import { exec } from 'child_process';
+import util from 'util';
 import { checkServiceStatus, getAccountSummary } from './core/status';
 import { runAutoDelete } from './core/autodelete';
-// import { getRealtimeMetrics } from './modules/system';
-// import { saveBotConfig, getBotConfig, sendTelegramMessage } from './modules/telegram';
-// IMPORT setSshBanner DITAMBAHKAN DI SINI
 import { saveDomain, generateSSL, installUdp, setSshBanner } from './core/setup'; 
+
+const execPromise = util.promisify(exec);
 
 async function getDomain() {
     try {
@@ -24,20 +25,52 @@ async function getDomain() {
     return "Belum Diatur";
 }
 
-// FUNGSI METRICS YANG HILANG
 async function getRealtimeMetrics() {
     const totalRam = Math.round(os.totalmem() / 1024 / 1024);
     const usedRam = Math.round((os.totalmem() - os.freemem()) / 1024 / 1024);
+    const cpus = os.cpus();
+    
+    let ip = "Tidak diketahui";
+    let city = "Tidak diketahui";
+    let isp = "Tidak diketahui";
+    let storageUsed = "0";
+    let storageTotal = "0";
+
+    try {
+      
+        const response = await fetch('http://ip-api.com/json/');
+        const data = await response.json();
+        if (data.status === 'success') {
+            ip = data.query;
+            city = data.city;
+            isp = data.isp;
+        }
+
+        const { stdout } = await execPromise("df -h / | tail -1 | awk '{print $3 \",\" $2}'");
+        const storageData = stdout.trim().split(',');
+        if (storageData.length === 2) {
+          
+            storageUsed = storageData[0].replace('G', '').replace('M', '');
+            storageTotal = storageData[1].replace('G', '').replace('M', '');
+        }
+    } catch (e) {
+      
+    }
+    
     return {
-        ip: "Otomatis", city: "Singapura", isp: "VPS Provider",
-        usedRamMb: usedRam, totalRamMb: totalRam,
-        storageUsed: "10GB", storageTotal: "50GB",
+        ip: ip, 
+        city: city, 
+        isp: isp,
+        usedRamMb: usedRam, 
+        totalRamMb: totalRam,
+        storageUsed: storageUsed, 
+        storageTotal: storageTotal,
         osName: os.type() + " " + os.release(),
-        cpuCore: os.cpus().length.toString() + " Cores"
+        cpuCores: cpus.length, 
+        cpuModel: cpus[0] ? cpus[0].model : "Unknown CPU"
     };
 }
 
-// FUNGSI BOT TELEGRAM YANG HILANG
 function getBotConfig() {
     return { token: process.env.TELEGRAM_BOT_TOKEN || '', chatId: process.env.ADMIN_ID || '' };
 }
@@ -88,7 +121,6 @@ async function mainMenu() {
     console.log(`  4 ✧ ${chalk.cyan('TROJAN'.padEnd(18))} 11 ✧ ${chalk.cyanBright('CHECK SERVICE')}`);
     console.log(`  5 ✧ ${chalk.gray('ZIVPN (Soon)'.padEnd(18))} 12 ✧ ${chalk.magentaBright('ALL SERVICE')}`);
     console.log(`  6 ✧ ${chalk.green('INSTALL UDP'.padEnd(18))} 13 ✧ ${chalk.blueBright('SETTING BOT')}`);
-    // MENU NOMOR 7 DIUBAH MENJADI PASANG BANNER
     console.log(`  7 ✧ ${chalk.green('PASANG BANNER'.padEnd(18))} 14 ✧ ${chalk.gray('AUTO DELETE')}`);
     console.log(`\n                x ✧ ${chalk.redBright('EXIT / KELUAR')}\n`);
 
@@ -212,7 +244,7 @@ async function handleAllService() {
 // --- HANDLER STANDAR LAINNYA ---
 async function handleInstallUdp() { console.clear(); console.log(chalk.greenBright.bold("=== 🚀 INSTALL BADVPN UDPGW ===")); const confirm = await inquirer.prompt([{ type: 'confirm', name: 'sure', message: 'Install UDPGW?', default: true }]); if (confirm.sure) { console.log(chalk.cyan("\nInstalasi... ⏳")); try { await installUdp(); console.log(chalk.green("\n✅ SUKSES di Port 7300.")); } catch (err: any) { console.log(`\n${chalk.red.bold('❌ Error:')} ${err.message}`); } } await askToReturn(); }
 
-// FUNGSI HANDLE BANNER DITAMBAHKAN DI SINI
+// FUNGSI HANDLE
 async function handleSetBanner() {
     console.clear();
     console.log(chalk.greenBright.bold("=== 📝 PASANG BANNER SSH (ISSUE.NET) ==="));
