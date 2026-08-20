@@ -18,6 +18,10 @@ import { saveDomain, generateSSL, installUdp, setSshBanner } from './core/setup'
 
 const execPromise = util.promisify(exec);
 
+async function askToReturn() {
+    await inquirer.prompt([{ type: 'input', name: 'enter', message: '\nTekan Enter untuk kembali ke menu...' }]);
+}
+
 async function getDomain() {
     try {
         if (fs.existsSync(PATHS.domainFile)) { 
