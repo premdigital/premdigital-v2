@@ -373,4 +373,4 @@ Upgrade: websocket
 // FUNGSI XRAY (Vmess, Vless, Trojan)
 async function handleCreateVmess() { console.log("Fitur Vmess dipanggil"); }
 async function handleCreateVless() { console.log("Fitur Vless dipanggil"); }
-main();
+mainMenu();

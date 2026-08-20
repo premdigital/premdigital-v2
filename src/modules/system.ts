@@ -11,6 +11,8 @@ export async function getRealtimeMetrics(): Promise<any> {
         usedRamMb: usedRam,
         totalRamMb: totalRam,
         storageUsed: "10GB",
-        storageTotal: "50GB"
+        storageTotal: "50GB",
+        osName: os.type() + " " + os.release(),
+        cpuCore: os.cpus().length.toString() + " Cores"
     };
 }
