@@ -20,7 +20,11 @@ const execPromise = util.promisify(exec);
 
 async function getDomain() {
     try {
-        if (fs.existsSync(PATHS.domainFile)) { return fs.readFileSync(PATHS.domainFile, 'utf-8').trim(); }
+        if (fs.existsSync(PATHS.domainFile)) { 
+            const d = fs.readFileSync(PATHS.domainFile, 'utf8').trim();
+            // Jika isinya tidak kosong, kembalikan domainnya
+            if (d.length > 2) return d;
+        }
     } catch (e) {}
     return "Belum Diatur";
 }
