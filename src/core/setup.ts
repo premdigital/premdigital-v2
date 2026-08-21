@@ -194,3 +194,24 @@ connect = 127.0.0.1:109`;
         
     } 
   }
+export async function restartAllServices() {
+    try {
+        console.log(chalk.yellow("\nMemulai ulang (Restart) semua layanan VPS... ⏳"));
+        
+        // Daftar semua service yang mau di-restart
+        const services = [
+            'ssh', 'sshd', 'dropbear', 'ws-openssh', 
+            'stunnel4', 'udpgw', 'xray', 'nginx'
+        ];
+
+        for (const service of services) {
+            console.log(chalk.cyan(`Restarting ${service}...`));
+            await runCommand(`systemctl restart ${service} 2>/dev/null || true`);
+        }
+
+        console.log(chalk.greenBright("\n✅ Semua layanan berhasil di-restart! VPS sekarang fresh kembali."));
+        return true;
+    } catch (error) {
+        console.log(chalk.red("\n❌ Terjadi kesalahan saat merestart layanan."));
+    }
+}

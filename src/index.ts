@@ -13,6 +13,7 @@ import util from 'util';
 import { checkServiceStatus, getAccountSummary } from './core/status';
 import { runAutoDelete } from './core/autodelete';
 import { saveDomain, generateSSL, installUdp, setSshBanner } from './core/setup'; 
+import { restartAllServices } from './core/setup.js'; 
 import { installWsOpenSsh } from './core/setup';
 const execPromise = util.promisify(exec);
 
@@ -247,7 +248,10 @@ async function handleAllService() {
             console.log(chalk.whiteBright.bold("======================\n"));
             await askToReturn();
             break;
-        case '2': console.log(chalk.cyan("\nRestarting... ⏳")); await runCommand('systemctl restart xray ssh dropbear ws-openssh udpgw nginx 2>/dev/null'); console.log(chalk.green("✅ Berhasil!")); await askToReturn(); break;
+        case '2': 
+    await restartAllServices();
+    await askToReturn();
+    break;
         case '3': 
     console.log(chalk.cyan("\nMenjalankan Speedtest Ookla Resmi... ⏳ (Tunggu sekitar 20 detik)\n")); 
     try { 
