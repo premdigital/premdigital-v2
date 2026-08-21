@@ -233,11 +233,20 @@ async function handleAllService() {
     console.clear(); console.log(chalk.magentaBright.bold("=== ⚙️ MENU ALL SERVICE ===\n"));
     const answers = await inquirer.prompt([{ type: 'list', name: 'action', message: chalk.yellow('Select Option :'), choices: [
         { name: `  1 ✧ ${chalk.cyan('Check service')}`, value: '1' }, { name: `  2 ✧ ${chalk.cyan('Restart All Service')}`, value: '2' }, { name: `  3 ✧ ${chalk.cyan('SPEED TEST VPS')}`, value: '3' },
-        { name: `  4 ✧ ${chalk.red('Rebuild Vps')}`, value: '4' }, { name: `  5 ✧ ${chalk.green('Restart Panel')} (Clear Cache)`, value: '5' }, { name: `  6 ✧ ${chalk.blueBright('Reboot VPS')} (Auto)`, value: '6' },
+        { name: `  4 ✧ ${chalk.red('Rebuild Vps')}`, value: '4' }, { name: `  5 ✧ ${chalk.green('Restart Panel (Clear Cache)')}`, value: '5' }, { name: `  6 ✧ ${chalk.blueBright('Reboot VPS')} (Auto)`, value: '6' },
         new inquirer.Separator(), { name: `  0 ✧ ${chalk.gray('Back To Menu')}`, value: '0' }
     ]}]);
     switch (answers.action) {
-        case '1': await handleCheckStatus(); break;
+        case '1':
+            console.log(chalk.cyan("\nMengecek status layanan, mohon tunggu... ⏳\n"));
+            const statuses = await checkServiceStatus(); 
+            console.log(chalk.whiteBright.bold("=== STATUS LAYANAN ==="));
+            for (const [service, status] of Object.entries(statuses)) {
+                console.log(` ✧ ${service.padEnd(12)} : ${status}`);
+            }
+            console.log(chalk.whiteBright.bold("======================\n"));
+            await askToReturn();
+            break;
         case '2': console.log(chalk.cyan("\nRestarting... ⏳")); await runCommand('systemctl restart xray ssh dropbear ws-openssh udpgw nginx 2>/dev/null'); console.log(chalk.green("✅ Berhasil!")); await askToReturn(); break;
         case '3': console.log(chalk.cyan("\nSpeedtest... ⏳")); try { console.log(chalk.green(await runCommand('curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -'))); } catch (e) { console.log(chalk.red("❌ Gagal.")); } await askToReturn(); break;
         case '4': const c = await inquirer.prompt([{ type: 'confirm', name: 'sure', message: 'Rebuild VPS?', default: false }]); if(c.sure) { await runCommand('apt-get update && apt-get upgrade -y && apt-get autoremove -y'); console.log(chalk.green("✅ Selesai!")); } await askToReturn(); break;

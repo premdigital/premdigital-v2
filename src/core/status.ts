@@ -14,7 +14,6 @@ export async function checkServiceStatus() {
     return statusResult;
 }
 
-// FUNGSI BARU: ACCOUNT SUMMARY
 export async function getAccountSummary() {
     const summary = { sshCount: 0, xrayCount: 0, sshUsers: [] as string[], xrayUsers: [] as string[] };
 
@@ -24,8 +23,7 @@ export async function getAccountSummary() {
             lines.forEach(line => {
                 if (line.trim()) {
                     const parts = line.split('|');
-                    // New format: username|expiry
-                    // Old legacy format may have been username|password|expiry
+                  
                     let username = parts[0] || 'unknown';
                     let expiry = 'unknown';
                     if (parts.length >= 3) expiry = parts[2] || 'unknown';
