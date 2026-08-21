@@ -28,14 +28,10 @@ export async function generateSSL(domain: string, email: string) {
 
 export async function installUdp() {
     try {
-        await runCommand('apt install build-essential cmake libssl-dev unzip wget -y > /dev/null 2>&1');
+        // Pre-compiled 64-bit
+        await runCommand('wget -qO /usr/local/bin/badvpn-udpgw "https://raw.githubusercontent.com/daybreakersx/premscript/master/badvpn-udpgw64"');
         
-        if (!fs.existsSync('/usr/local/bin/badvpn-udpgw')) {
-            await runCommand('wget -q https://github.com/ambrop72/badvpn/archive/master.zip');
-            await runCommand('unzip -q master.zip');
-            await runCommand('cd badvpn-master && mkdir build && cd build && cmake .. -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 && make install');
-            await runCommand('rm -rf badvpn-master master.zip');
-        }
+        await runCommand('chmod +x /usr/local/bin/badvpn-udpgw');
 
         const serviceConfig = `[Unit]
 Description=BadVPN UDP Gateway By Prem Digital
@@ -48,13 +44,14 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target`;
-        
+
         fs.writeFileSync('/etc/systemd/system/udpgw.service', serviceConfig);
         await runCommand('systemctl daemon-reload');
         await runCommand('systemctl enable udpgw 2>/dev/null');
         await runCommand('systemctl restart udpgw');
         await runCommand('ufw allow 7300/tcp 2>/dev/null || true');
         await runCommand('ufw allow 7300/udp 2>/dev/null || true');
+        
         return true;
     } catch (error) {
         throw new Error("Gagal menginstal UDP Custom (BadVPN).");
