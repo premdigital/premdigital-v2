@@ -39,7 +39,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000
+ExecStart=/usr/local/bin/badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000
 Restart=always
 
 [Install]
@@ -49,8 +49,8 @@ WantedBy=multi-user.target`;
         await runCommand('systemctl daemon-reload');
         await runCommand('systemctl enable udpgw 2>/dev/null');
         await runCommand('systemctl restart udpgw');
-        await runCommand('ufw allow 7300/tcp 2>/dev/null || true');
-        await runCommand('ufw allow 7300/udp 2>/dev/null || true');
+        await runCommand('ufw allow 7100/tcp 2>/dev/null || true');
+        await runCommand('ufw allow 7100/udp 2>/dev/null || true');
         
         return true;
     } catch (error) {
@@ -80,8 +80,8 @@ export async function setSshBanner() {
         await runCommand('systemctl daemon-reload');
         await runCommand('systemctl enable udpgw 2>/dev/null');
         await runCommand('systemctl restart udpgw');
-        await runCommand('ufw allow 7300/tcp 2>/dev/null || true');
-        await runCommand('ufw allow 7300/udp 2>/dev/null || true');
+        await runCommand('ufw allow 7100/tcp 2>/dev/null || true');
+        await runCommand('ufw allow 7100/udp 2>/dev/null || true');
         return true;
     } catch (error) {
         throw new Error("Gagal menginstal UDP Custom (BadVPN).");
