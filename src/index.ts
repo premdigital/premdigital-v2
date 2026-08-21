@@ -165,7 +165,6 @@ async function mainMenu() {
             await askToReturn();
             break;
     }
-}
 
 // ==== SUB MENU: ACCOUNT SUMMARY ====
 async function handleAccountSummary() {
