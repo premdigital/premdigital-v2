@@ -10,7 +10,6 @@ export async function createSsh(username: string, pass: string, days: number) {
         throw new Error("Username hanya boleh huruf, angka, underscore atau tanda minus, dan panjang 1-32 karakter!");
     }
 
-    // Cek apakah user sudah ada (runCommandArgs mengembalikan stdout jika user ada, kosong jika tidak)
     const checkUser = await runCommandArgs('id', ['-u', username]);
     if (checkUser !== "") {
         throw new Error(`Username ${username} sudah terdaftar di server.`);
@@ -21,22 +20,19 @@ export async function createSsh(username: string, pass: string, days: number) {
         expDate.setDate(expDate.getDate() + days);
         const expStr = expDate.toISOString().split('T')[0];
 
-        // MENGUBAH /bin/false menjadi /bin/true agar kompatibel dengan WS/Dropbear
         await runCommandArgs('useradd', ['-e', expStr, '-s', '/bin/true', '-M', username]);
 
-        // set password via chpasswd by writing to stdin (menghindari echo pada shell)
         await setPassword(username, pass);
 
         const dbDir = path.dirname(PATHS.userDbSsh);
         if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
         if (!fs.existsSync(PATHS.userDbSsh)) fs.writeFileSync(PATHS.userDbSsh, '');
 
-        // STORE WITHOUT PASSWORD (option A): username|expiry
         fs.appendFileSync(PATHS.userDbSsh, `${username}|${expStr}\n`);
         try {
-            fs.chmodSync(PATHS.userDbSsh, 0o600); // hanya owner dapat baca/tulis
+            fs.chmodSync(PATHS.userDbSsh, 0o600); 
         } catch (e) {
-            // Jika chmod gagal, jangan gagalkan proses pembuatan akun — cukup log.
+            
             console.error(`Gagal mengatur permission untuk ${PATHS.userDbSsh}: ${e}`);
         }
 
@@ -52,7 +48,7 @@ export async function setPassword(username: string, pass: string): Promise<void>
             const child = spawn('chpasswd', [], { stdio: ['pipe', 'pipe', 'pipe'], shell: false });
             child.on('error', (err) => {
                 console.error(`[chpasswd error]: ${err.message}`);
-                resolve(); // jangan lempar agar perilaku lama tetap (kembali kosong pada error)
+                resolve(); 
             });
 
             child.stdin.write(`${username}:${pass}\n`);
@@ -80,13 +76,12 @@ export async function deleteSsh(username: string) {
 
     const checkUser = await runCommandArgs('id', ['-u', username]);
     
-    // Jika user tidak ada di VPS Linux
     if (checkUser === "") {
         if (fs.existsSync(PATHS.userDbSsh)) {
             const escaped = escapeForSed(username);
             await runCommandArgs('sed', ['-i', `/^${escaped}\\|/d`, PATHS.userDbSsh]);
         }
-        return false; // User tidak ditemukan
+        return false; 
     }
 
     try {

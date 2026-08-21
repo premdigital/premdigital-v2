@@ -13,7 +13,7 @@ import util from 'util';
 import { checkServiceStatus, getAccountSummary } from './core/status';
 import { runAutoDelete } from './core/autodelete';
 import { saveDomain, generateSSL, installUdp, setSshBanner } from './core/setup'; 
-
+import { installWsOpenSsh } from './core/setup';
 const execPromise = util.promisify(exec);
 
 async function askToReturn() {
@@ -125,7 +125,7 @@ async function mainMenu() {
     console.log(`  1 ✧ ${chalk.cyan('SSH / WS'.padEnd(18))}  8 ✧ ${chalk.whiteBright('ACCOUNT SUMMARY')}`);
     console.log(`  2 ✧ ${chalk.cyan('VMESS'.padEnd(18))}  9 ✧ ${chalk.yellowBright('ADD DOMAIN')}`);
     console.log(`  3 ✧ ${chalk.cyan('VLESS'.padEnd(18))} 10 ✧ ${chalk.greenBright('CERT SSL')}`);
-    console.log(`  4 ✧ ${chalk.cyan('TROJAN'.padEnd(18))} 11 ✧ ${chalk.cyanBright('CHECK SERVICE')}`);
+    console.log(`  4 ✧ ${chalk.cyan('TROJAN'.padEnd(18))} 11 ✧ ${chalk.green('Install WS-OpenSSH')}`);
     console.log(`  5 ✧ ${chalk.gray('ZIVPN (Soon)'.padEnd(18))} 12 ✧ ${chalk.magentaBright('ALL SERVICE')}`);
     console.log(`  6 ✧ ${chalk.green('INSTALL UDP'.padEnd(18))} 13 ✧ ${chalk.blueBright('SETTING BOT')}`);
     console.log(`  7 ✧ ${chalk.green('PASANG BANNER'.padEnd(18))} 14 ✧ ${chalk.gray('AUTO DELETE')}`);
@@ -149,7 +149,7 @@ async function mainMenu() {
         case '8': await handleAccountSummary(); break;
         case '9': await handleAddDomain(); break;
         case '10': await handleCertSSL(); break;
-        case '11': await handleCheckStatus(); break;
+        case '11': await installWsOpenSsh(); break;
         case '12': await handleAllService(); break; 
         case '13': await handleSetupBot(); break;
         case '14': await handleAutoDelete(); break;
