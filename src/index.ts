@@ -450,3 +450,4 @@ async function handleCreateTrojan() {
     await createTrojan(); 
     await askToReturn(); 
 }
+mainMenu();
