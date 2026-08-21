@@ -17,7 +17,8 @@ import { saveDomain, generateSSL, installUdp, setSshBanner } from './core/setup'
 const execPromise = util.promisify(exec);
 
 async function askToReturn() {
-    await inquirer.prompt([{ type: 'input', name: 'enter', message: '\nTekan Enter untuk kembali ke menu...' }]);
+    await inquirer.prompt([{ type: 'input', name: 'enter', message: '\nTekan Enter untuk kembali ke menu utama...' }]);
+    mainMenu(); 
 }
 
 async function getDomain() {
@@ -141,7 +142,7 @@ async function mainMenu() {
     switch (answers.menuOption.toLowerCase().trim()) {
         case '1': await handleCreateSsh(); break;
         case '2': await handleCreateVmess(); break;
-async function handleCreateVless() { console.log("Fitur Vless menyusul..."); }
+        case '3': await handleCreateVless(); break;
         case '4': await handleCreateTrojan(); break;
         case '6': await handleInstallUdp(); break;
         case '7': await handleSetBanner(); break;
@@ -435,7 +436,17 @@ Upgrade: websocket
     await askToReturn(); 
 }
 
-async function handleCreateVmess() { console.log("Fitur Vmess dipanggil"); }
-async function handleCreateVless() { console.log("Fitur Vless dipanggil"); }
-async function handleCreateTrojan() { console.log("Fitur Trojan dipanggil"); }
-mainMenu();
+async function handleCreateVmess() { 
+    await createVmess(); 
+    await askToReturn(); 
+}
+
+async function handleCreateVless() { 
+    await createVless(); 
+    await askToReturn(); 
+}
+
+async function handleCreateTrojan() { 
+    await createTrojan(); 
+    await askToReturn(); 
+}
