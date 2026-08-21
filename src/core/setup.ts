@@ -2,6 +2,7 @@
 import * as fs from 'fs';
 import { PATHS } from '../config';
 import { runCommand } from '../utils/system';
+import chalk from 'chalk';
 
 export async function saveDomain(domain: string) {
     try {
@@ -163,7 +164,33 @@ WantedBy=multi-user.target`;
         await runCommand('ufw allow 80/tcp 2>/dev/null || true');
         
         return true;
-    } catch (error) {
+      } catch (error) {
         throw new Error("Gagal menginstal WS-OpenSSH.");
-    }
+      
+        console.log(chalk.yellow("\nMenginstal Stunnel4 untuk Port 443 SSL... ⏳"));
+        await runCommand('apt-get install stunnel4 -y >/dev/null 2>&1');
+      
+        await runCommand('openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj "/C=ID/ST=Jakarta/L=Jakarta/O=PremDigital/OU=PremDigital/CN=premdigital.net" -keyout /etc/stunnel/stunnel.pem -out /etc/stunnel/stunnel.pem >/dev/null 2>&1');
+      
+        const stunnelConf = `pid = /var/run/stunnel.pid
+cert = /etc/stunnel/stunnel.pem
+client = no
+socket = a:SO_REUSEADDR=1
+socket = l:TCP_NODELAY=1
+socket = r:TCP_NODELAY=1
+
+[dropbear]
+accept = 443
+connect = 127.0.0.1:109`;
+        
+        fs.writeFileSync('/etc/stunnel/stunnel.conf', stunnelConf);
+
+        await runCommand("sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4");
+        await runCommand('systemctl restart stunnel4');
+        await runCommand('systemctl enable stunnel4 2>/dev/null');
+      
+        await runCommand('ufw allow 443/tcp 2>/dev/null || true');
+        await runCommand('iptables -A INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || true');
+        
+    } 
   }
