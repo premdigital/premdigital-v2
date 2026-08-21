@@ -48,7 +48,7 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target`;
-
+        
         fs.writeFileSync('/etc/systemd/system/udpgw.service', serviceConfig);
         await runCommand('systemctl daemon-reload');
         await runCommand('systemctl enable udpgw 2>/dev/null');
@@ -79,7 +79,7 @@ export async function setSshBanner() {
 `;
 
     try {
-        fs.writeFileSync('/etc/systemd/system/udpgw.service', serviceConfig);
+        
         await runCommand('systemctl daemon-reload');
         await runCommand('systemctl enable udpgw 2>/dev/null');
         await runCommand('systemctl restart udpgw');
@@ -159,8 +159,7 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target`;
 
-        fs.writeFileSync('/etc/systemd/system/ws-openssh.service', serviceConfig);
-        
+        fs.writeFileSync('/etc/systemd/system/udpgw.service', serviceConfig);
         await runCommand('systemctl daemon-reload');
         await runCommand('systemctl enable ws-openssh 2>/dev/null');
         await runCommand('systemctl restart ws-openssh');
