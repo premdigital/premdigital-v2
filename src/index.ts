@@ -121,7 +121,7 @@ async function displayDashboard() {
 
 async function mainMenu() {
     await displayDashboard();
-
+}
     console.log(`  1 ✧ ${chalk.cyan('SSH / WS'.padEnd(18))}  8 ✧ ${chalk.whiteBright('ACCOUNT SUMMARY')}`);
     console.log(`  2 ✧ ${chalk.cyan('VMESS'.padEnd(18))}  9 ✧ ${chalk.yellowBright('ADD DOMAIN')}`);
     console.log(`  3 ✧ ${chalk.cyan('VLESS'.padEnd(18))} 10 ✧ ${chalk.greenBright('CERT SSL')}`);
