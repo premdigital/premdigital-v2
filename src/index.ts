@@ -3,8 +3,6 @@
 import inquirer from 'inquirer';
 import * as fs from 'fs';
 import chalk from 'chalk';
-// import { getRealtimeMetrics } from './modules/system.js';
-//import { getBotConfig, saveBotConfig, sendTelegramMessage } from './modules/telegram.js';
 import { PATHS } from './config';
 import { runCommand } from './utils/system';
 import { createSsh, deleteSsh } from './core/ssh';
@@ -26,7 +24,7 @@ async function getDomain() {
     try {
         if (fs.existsSync(PATHS.domainFile)) { 
             const d = fs.readFileSync(PATHS.domainFile, 'utf8').trim();
-            // Jika isinya tidak kosong, kembalikan domainnya
+          
             if (d.length > 2) return d;
         }
     } catch (e) {}
@@ -146,7 +144,7 @@ async function mainMenu() {
 async function handleCreateVless() { console.log("Fitur Vless menyusul..."); }
         case '4': await handleCreateTrojan(); break;
         case '6': await handleInstallUdp(); break;
-        case '7': await handleSetBanner(); break; // <-- PEMANGGILAN MENU 7 DITAMBAHKAN
+        case '7': await handleSetBanner(); break;
         case '8': await handleAccountSummary(); break;
         case '9': await handleAddDomain(); break;
         case '10': await handleCertSSL(); break;
@@ -403,7 +401,7 @@ Upgrade: websocket
 
 
 📥 SALURAN FREE CONFIG
-🔗 http://Saluran/contoh/
+🔗 https://whatsapp.com/channel/0029VbCmaeM0G0XbknOTZP3c
 
 © Prem Digital Bot - ${year}
 ✨ Terima kasih telah menggunakan layanan kami!`;
@@ -437,7 +435,7 @@ Upgrade: websocket
     await askToReturn(); 
 }
 
-// FUNGSI XRAY (Vmess, Vless, Trojan)
 async function handleCreateVmess() { console.log("Fitur Vmess dipanggil"); }
 async function handleCreateVless() { console.log("Fitur Vless dipanggil"); }
+async function handleCreateTrojan() { console.log("Fitur Trojan dipanggil"); }
 mainMenu();
