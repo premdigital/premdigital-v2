@@ -232,7 +232,7 @@ async function handleXraySummary() {
 async function handleAllService() {
     console.clear(); console.log(chalk.magentaBright.bold("=== ⚙️ MENU ALL SERVICE ===\n"));
     const answers = await inquirer.prompt([{ type: 'list', name: 'action', message: chalk.yellow('Select Option :'), choices: [
-        { name: `  1 ✧ ${chalk.cyan('Check service')}`, value: '1' }, { name: `  2 ✧ ${chalk.cyan('Restart All Service')}`, value: '2' }, { name: `  3 ✧ ${chalk.magentaBright('Speedtest Ookla')}`, value: '2' },
+        { name: `  1 ✧ ${chalk.cyan('Check service')}`, value: '1' }, { name: `  2 ✧ ${chalk.cyan('Restart All Service')}`, value: '2' }, { name: `  3 ✧ ${chalk.magentaBright('Speedtest Ookla')}`, value: '3' },
         { name: `  4 ✧ ${chalk.red('Rebuild Vps')}`, value: '4' }, { name: `  5 ✧ ${chalk.green('Restart Panel (Clear Cache)')}`, value: '5' }, { name: `  6 ✧ ${chalk.blueBright('Reboot VPS')} (Auto)`, value: '6' },
         new inquirer.Separator(), { name: `  0 ✧ ${chalk.gray('Back To Menu')}`, value: '0' }
     ]}]);
