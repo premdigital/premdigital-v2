@@ -10,36 +10,6 @@ export async function saveDomain(domain: string) {
     } catch (error) { throw new Error("Gagal menyimpan file domain."); }
 }
 
-export async function runSpeedtestOokla() {
-    try {
-        
-        const isInstalled = await runCommand('command -v speedtest-cli 2>/dev/null || command -v speedtest 2>/dev/null');
-        
-        if (!isInstalled) {
-            console.log(chalk.yellow("\nMenginstal Speedtest Ookla pertama kali, mohon tunggu... ⏳"));
-            await runCommand('apt-get update >/dev/null 2>&1');
-            await runCommand('apt-get install curl -y >/dev/null 2>&1');
-            
-            await runCommand('apt-get install speedtest-cli -y >/dev/null 2>&1 || apt-get install python3-speedtest-cli -y >/dev/null 2>&1');
-        }
-
-        console.log(chalk.cyan("\nMenjalankan Speedtest Ookla... (Bisa memakan waktu 15-30 detik) 🚀\n"));
-        
-        const result = await runCommand('speedtest-cli --simple || speedtest --accept-license --accept-gdpr');
-        
-        if (result) {
-            console.log(chalk.greenBright("=== HASIL SPEEDTEST OOKLA ==="));
-            console.log(chalk.whiteBright(result));
-            console.log(chalk.greenBright("============================="));
-        } else {
-            throw new Error("Hasil kosong.");
-        }
-        return true;
-    } catch (error) {
-        throw new Error("Gagal menjalankan Speedtest. Pastikan server memiliki koneksi internet.");
-    }
-}
-
 export async function generateSSL(domain: string, email: string) {
     try {
         await runCommand('systemctl stop xray nginx ws-openssh 2>/dev/null');
