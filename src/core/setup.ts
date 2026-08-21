@@ -36,8 +36,6 @@ export async function installUdp() {
             await runCommand('cd badvpn-master && mkdir build && cd build && cmake .. -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 && make install');
             await runCommand('rm -rf badvpn-master master.zip');
         }
-      
-    try {
 
         const serviceConfig = `[Unit]
 Description=BadVPN UDP Gateway By Prem Digital
@@ -55,13 +53,14 @@ WantedBy=multi-user.target`;
         await runCommand('systemctl daemon-reload');
         await runCommand('systemctl enable udpgw 2>/dev/null');
         await runCommand('systemctl restart udpgw');
-        await runCommand('ufw allow 7300/tcp 2>/dev/null');
-        await runCommand('ufw allow 7300/udp 2>/dev/null');
+        await runCommand('ufw allow 7300/tcp 2>/dev/null || true');
+        await runCommand('ufw allow 7300/udp 2>/dev/null || true');
         return true;
     } catch (error) {
         throw new Error("Gagal menginstal UDP Custom (BadVPN).");
     }
 }
+                             
 export async function setSshBanner() {
   
     const banner = `<font color="#00FFFF"><b>======================================</b></font>
@@ -162,7 +161,6 @@ WantedBy=multi-user.target`;
 
         fs.writeFileSync('/etc/systemd/system/ws-openssh.service', serviceConfig);
         
-        // 4. Nyalakan mesinnya!
         await runCommand('systemctl daemon-reload');
         await runCommand('systemctl enable ws-openssh 2>/dev/null');
         await runCommand('systemctl restart ws-openssh');
