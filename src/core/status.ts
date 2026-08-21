@@ -8,11 +8,15 @@ export async function checkServiceStatus() {
     const statusResult: { [key: string]: string } = {};
 
     for (const service of services) {
-        const result = await runCommand(`systemctl is-active ${service}`);
-        statusResult[service] = result === 'active' ? '🟢 Active' : '🔴 Inactive';
+        try {
+          
+            const result = await runCommand(`systemctl is-active ${service}`);
+            statusResult[service] = result.trim() === 'active' ? '🟢 Active' : '🔴 Inactive';
+        } catch (e) {
+          
+            statusResult[service] = '🔴 Inactive';
+        }
     }
-    return statusResult;
-}
 
 export async function getAccountSummary() {
     const summary = { sshCount: 0, xrayCount: 0, sshUsers: [] as string[], xrayUsers: [] as string[] };

@@ -6,7 +6,6 @@ import { PATHS } from '../config';
 import { XrayConfig, XrayClient } from '../types';
 import { runCommand, isValidUsername } from '../utils/system';
 
-// Fungsi membaca dan mengubah file config xray
 function updateXrayConfig(protocol: 'vmess' | 'vless' | 'trojan', newClient: XrayClient) {
     try {
         if (!fs.existsSync(PATHS.xrayConfig)) throw new Error("File config Xray tidak ditemukan!");
@@ -33,7 +32,6 @@ function updateXrayConfig(protocol: 'vmess' | 'vless' | 'trojan', newClient: Xra
     }
 }
 
-// Fungsi mencatat expired akun Xray
 function saveExpiry(username: string, days: number) {
     const expDate = new Date();
     expDate.setDate(expDate.getDate() + days);
