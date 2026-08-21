@@ -13,7 +13,7 @@ import util from 'util';
 import { checkServiceStatus, getAccountSummary } from './core/status';
 import { runAutoDelete } from './core/autodelete';
 import { saveDomain, generateSSL, installUdp, setSshBanner } from './core/setup'; 
-import { restartAllServices } from './core/setup.js'; 
+import { restartAllServices } from './core/setup'; 
 import { installWsOpenSsh } from './core/setup';
 const execPromise = util.promisify(exec);
 
