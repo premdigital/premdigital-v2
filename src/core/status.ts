@@ -2,6 +2,11 @@
 import * as fs from 'fs';
 import { PATHS } from '../config';
 import { runCommand } from '../utils/system';
+import { exec } from 'child_process';
+import * as util from 'util';
+
+// Tambahkan "Jalan Tol" untuk membaca status tanpa perantara runCommand
+const execPromise = util.promisify(exec);
 
 export async function checkServiceStatus() {
     const services = ['ssh', 'dropbear', 'ws-openssh', 'xray', 'udpgw'];
@@ -9,10 +14,16 @@ export async function checkServiceStatus() {
 
     for (const service of services) {
         try {
-          
-            const result = await runCommand(`systemctl is-active ${service}`);
-            statusResult[service] = result.trim() === 'active' ? '🟢 Active' : '🔴 Inactive';
+            // Tanya Linux langsung!
+            const { stdout } = await execPromise(`systemctl is-active ${service}`);
+            
+            if (stdout.trim().toLowerCase() === 'active') {
+                statusResult[service] = '🟢 Active';
+            } else {
+                statusResult[service] = '🔴 Inactive';
+            }
         } catch (e) {
+            // Jika mati, systemctl is-active memang menghasilkan error (exit code 3)
             statusResult[service] = '🔴 Inactive';
         }
     }
