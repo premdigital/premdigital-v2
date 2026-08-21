@@ -48,9 +48,9 @@ export async function getAccountSummary() {
                     const parts = line.split(':');
                     summary.xrayUsers.push(`- ${parts[0]} (Exp: ${parts[1]})`);
                     summary.xrayCount++;
-                }
-            });
-        }
+                } 
+            }); 
+        } 
     } catch (e) {}
 
     return summary;
