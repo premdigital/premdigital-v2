@@ -232,7 +232,7 @@ async function handleXraySummary() {
 async function handleAllService() {
     console.clear(); console.log(chalk.magentaBright.bold("=== ⚙️ MENU ALL SERVICE ===\n"));
     const answers = await inquirer.prompt([{ type: 'list', name: 'action', message: chalk.yellow('Select Option :'), choices: [
-        { name: `  1 ✧ ${chalk.cyan('Check service')}`, value: '1' }, { name: `  2 ✧ ${chalk.cyan('Restart All Service')}`, value: '2' }, { name: `  3 ✧ ${chalk.cyan('SPEED TEST VPS')}`, value: '3' },
+        { name: `  1 ✧ ${chalk.cyan('Check service')}`, value: '1' }, { name: `  2 ✧ ${chalk.cyan('Restart All Service')}`, value: '2' }, { name: `  3 ✧ ${chalk.magentaBright('Speedtest Ookla')}`, value: '2' },
         { name: `  4 ✧ ${chalk.red('Rebuild Vps')}`, value: '4' }, { name: `  5 ✧ ${chalk.green('Restart Panel (Clear Cache)')}`, value: '5' }, { name: `  6 ✧ ${chalk.blueBright('Reboot VPS')} (Auto)`, value: '6' },
         new inquirer.Separator(), { name: `  0 ✧ ${chalk.gray('Back To Menu')}`, value: '0' }
     ]}]);
@@ -248,7 +248,17 @@ async function handleAllService() {
             await askToReturn();
             break;
         case '2': console.log(chalk.cyan("\nRestarting... ⏳")); await runCommand('systemctl restart xray ssh dropbear ws-openssh udpgw nginx 2>/dev/null'); console.log(chalk.green("✅ Berhasil!")); await askToReturn(); break;
-        case '3': console.log(chalk.cyan("\nSpeedtest... ⏳")); try { console.log(chalk.green(await runCommand('curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -'))); } catch (e) { console.log(chalk.red("❌ Gagal.")); } await askToReturn(); break;
+        case '3': 
+    console.log(chalk.cyan("\nMenjalankan Speedtest Ookla Resmi... ⏳ (Tunggu sekitar 20 detik)\n")); 
+    try { 
+        const cmd = `if ! command -v speedtest &> /dev/null; then wget -qO- https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-x86_64.tgz | tar xvz -C /usr/local/bin speedtest; fi && speedtest --accept-license --accept-gdpr`;
+        const result = await runCommand(cmd);
+        console.log(chalk.greenBright(result)); 
+    } catch (e) { 
+        console.log(chalk.red("❌ Gagal menjalankan Speedtest Ookla.")); 
+    } 
+    await askToReturn(); 
+    break;
         case '4': const c = await inquirer.prompt([{ type: 'confirm', name: 'sure', message: 'Rebuild VPS?', default: false }]); if(c.sure) { await runCommand('apt-get update && apt-get upgrade -y && apt-get autoremove -y'); console.log(chalk.green("✅ Selesai!")); } await askToReturn(); break;
         case '5': await runCommand('sync; echo 3 > /proc/sys/vm/drop_caches; journalctl --vacuum-time=1d 2>/dev/null'); console.log(chalk.green("✅ Cache dibersihkan!")); await askToReturn(); break;
         case '6': const t = await inquirer.prompt([{ type: 'input', name: 'jam', message: 'Jam reboot (00-23):', default: '00' }]); await runCommand(`crontab -l 2>/dev/null | grep -v '/sbin/reboot' > /tmp/cronjob || true; echo "0 ${t.jam} * * * /sbin/reboot" >> /tmp/cronjob; crontab /tmp/cronjob && rm /tmp/cronjob`); console.log(chalk.green(`✅ Diatur jam ${t.jam}:00`)); await askToReturn(); break;
