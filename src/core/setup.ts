@@ -103,13 +103,11 @@ def handle_client(client_socket):
             client_socket.close()
             return
             
-        # Balas dengan HTTP 101 Switching Protocols agar terbaca sebagai WebSocket
         response = "HTTP/1.1 101 Switching Protocols\\r\\nUpgrade: websocket\\r\\nConnection: Upgrade\\r\\n\\r\\n"
         client_socket.send(response.encode())
         
-        # Sambungkan ke SSH lokal (Port 22)
         ssh_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        ssh_socket.connect(('127.0.0.1', 22,80,443))
+        ssh_socket.connect(('127.0.0.1', 22,80,443,8080,8443))
         
         def forward(source, destination):
             try:
@@ -129,7 +127,7 @@ def handle_client(client_socket):
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server.bind(('0.0.0.0', 80,443)) # Berjalan di Port 80
+server.bind(('0.0.0.0', 80,443,8080,8443)) 
 server.listen(100)
 
 while True:
@@ -181,7 +179,7 @@ socket = r:TCP_NODELAY=1
 
 [dropbear]
 accept = 443
-connect = 127.0.0.1:109`;
+connect = 127.0.0.1:22`;
         
         fs.writeFileSync('/etc/stunnel/stunnel.conf', stunnelConf);
 
@@ -198,7 +196,6 @@ export async function restartAllServices() {
     try {
         console.log(chalk.yellow("\nMemulai ulang (Restart) semua layanan VPS... ⏳"));
         
-        // Daftar semua service yang mau di-restart
         const services = [
             'ssh', 'sshd', 'dropbear', 'ws-openssh', 
             'stunnel4', 'udpgw', 'xray', 'nginx'
